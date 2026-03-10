@@ -3,7 +3,6 @@ services:
   orion:
     image: fiware/orion-ld
     hostname: orion
-    container_name: fiware-orion
     depends_on:
       - mongo-db
     expose:
@@ -18,7 +17,6 @@ services:
   mongo-db:
     image: mongo:4.4
     hostname: mongo-db
-    container_name: db-mongo
     expose:
       - "27017"
     ports:
@@ -27,5 +25,45 @@ services:
     volumes:
       - mongo-db:/data
 
+  ld-context:
+    image: httpd:alpine
+    hostname: context
+    ports:
+      - "3004:80"
+    volumes:
+      - ./context:/usr/local/apache2/htdocs
+
+  quantumleap:
+    image: orchestracities/quantumleap:latest
+    hostname: quantumleap
+    depends_on:
+      - timescale
+      - orion
+    ports:
+      - "8668:8668"
+    environment:
+      - QL_DEFAULT_DB=timescale
+      - POSTGRES_HOST=timescale
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB_NAME=quantumleap
+      - POSTGRES_DB_USER=quantumleap
+      - POSTGRES_DB_PASS=quantumleap
+      - LOGLEVEL=DEBUG
+
+  timescale:
+    image: timescale/timescaledb-ha:pg14-latest
+    hostname: timescale
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=quantumleap
+      - POSTGRES_USER=quantumleap
+      - POSTGRES_PASSWORD=quantumleap
+    volumes:
+      - timescale-db:/var/lib/postgresql/data
+      - ./scripts/db-init:/docker-entrypoint-initdb.d
+
 volumes:
   mongo-db:
+  timescale-db:
+

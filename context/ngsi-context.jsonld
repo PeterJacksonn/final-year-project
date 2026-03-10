@@ -1,0 +1,7 @@
+{
+  "@context": {
+    "WaterQualityObserved": "https://smartdatamodels.org/dataModel.Environment/WaterQualityObserved",
+    "WaterQualityStation": "https://smartdatamodels.org/dataModel.Environment/WaterQualityStation",
+    "WaterBody": "https://smartdatamodels.org/dataModel.Environment/WaterBody"
+  }
+}

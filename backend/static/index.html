@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>River Sheaf — Water Quality Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0e0f;
+      --surface:  #0f1518;
+      --border:   #1e2d30;
+      --muted:    #2a3f44;
+      --text:     #c8d8da;
+      --dim:      #5a7a80;
+      --accent:   #3ddbd9;
+      --warn:     #f0a500;
+      --danger:   #e05a4e;
+      --ok:       #4caf7d;
+      --mono:     'IBM Plex Mono', monospace;
+      --sans:     'IBM Plex Sans', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ─── LAYOUT ─── */
+    .app { display: grid; grid-template-rows: 56px 1fr; height: 100vh; overflow: hidden; }
+
+    header {
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .header-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+    header h1 { font-family: var(--mono); font-size: 13px; font-weight: 400; letter-spacing: 0.08em; color: var(--accent); }
+    header .sub { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-left: auto; }
+
+    .upload-btn {
+      margin-left: 16px;
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.05em;
+    }
+    .upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .main { display: grid; grid-template-columns: 260px 1fr; overflow: hidden; }
+
+    /* ─── SIDEBAR ─── */
+    aside {
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+    .sidebar-section { padding: 0 16px 16px; }
+    .sidebar-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .water-body {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      margin-bottom: 4px;
+    }
+    .water-body-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .water-body-id { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+    .station-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.12s;
+      margin-bottom: 2px;
+    }
+    .station-item:hover { border-color: var(--muted); background: var(--surface); }
+    .station-item.active { border-color: var(--accent); background: rgba(61,219,217,0.05); }
+    .station-indicator {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+      background: var(--ok);
+      box-shadow: 0 0 6px var(--ok);
+    }
+    .station-name { font-size: 12px; line-height: 1.3; }
+    .station-id { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+
+    .sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+    /* ─── MAIN CONTENT ─── */
+    .content { overflow-y: auto; padding: 24px; }
+
+    .no-selection {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; flex-direction: column; gap: 12px;
+      color: var(--dim);
+    }
+    .no-selection span { font-family: var(--mono); font-size: 12px; }
+
+    .station-header { margin-bottom: 24px; }
+    .station-header h2 { font-size: 18px; font-weight: 400; color: var(--text); margin-bottom: 4px; }
+    .station-header .meta { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+    /* ─── READINGS GRID ─── */
+    .readings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .reading-card {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      transition: all 0.12s;
+      position: relative;
+    }
+    .reading-card:hover { border-color: var(--muted); }
+    .reading-card.selected { border-color: var(--accent); background: rgba(61,219,217,0.04); }
+    .reading-label { font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: 0.06em; margin-bottom: 6px; }
+    .reading-value { font-family: var(--mono); font-size: 22px; font-weight: 300; color: var(--accent); }
+    .reading-unit { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 2px; }
+    .reading-time { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 6px; }
+    .reading-null { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+
+    /* ─── CHART ─── */
+    .chart-section { }
+    .chart-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .chart-title { font-family: var(--mono); font-size: 12px; color: var(--text); letter-spacing: 0.06em; }
+    .chart-subtitle { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+    .chart-wrap {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 20px;
+      height: 280px;
+      position: relative;
+    }
+    .chart-empty {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; color: var(--dim);
+      font-family: var(--mono); font-size: 11px;
+    }
+
+    /* ─── UPLOAD MODAL ─── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 32px;
+      width: 480px;
+      max-width: 90vw;
+    }
+    .modal h3 { font-family: var(--mono); font-size: 13px; color: var(--accent); margin-bottom: 20px; letter-spacing: 0.08em; }
+    .drop-zone {
+      border: 1px dashed var(--muted);
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 16px;
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(61,219,217,0.04); }
+    .drop-zone p { font-family: var(--mono); font-size: 12px; color: var(--dim); }
+    .drop-zone .drop-hint { font-size: 10px; margin-top: 6px; color: var(--muted); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .btn {
+      padding: 8px 20px;
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em;
+      cursor: pointer; border: 1px solid var(--border); background: transparent;
+      color: var(--dim); transition: all 0.12s;
+    }
+    .btn:hover { border-color: var(--muted); color: var(--text); }
+    .btn.primary { border-color: var(--accent); color: var(--accent); }
+    .btn.primary:hover { background: rgba(61,219,217,0.1); }
+    .upload-status { font-family: var(--mono); font-size: 11px; margin-top: 12px; padding: 10px; border: 1px solid var(--border); display: none; }
+    .upload-status.ok { border-color: var(--ok); color: var(--ok); }
+    .upload-status.err { border-color: var(--danger); color: var(--danger); }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="header-dot"></div>
+    <h1>WATER QUALITY MONITOR — RIVER SHEAF</h1>
+    <span class="sub" id="header-time"></span>
+    <button class="upload-btn" onclick="openUpload()">⊕ INGEST CSV</button>
+  </header>
+
+  <div class="main">
+    <aside>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Water Body</div>
+        <div id="waterbody-panel">
+          <div class="water-body">
+            <div class="water-body-name">Loading…</div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="sidebar-divider" />
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Monitoring Stations</div>
+        <div id="stations-list"></div>
+      </div>
+    </aside>
+
+    <main class="content" id="main-content">
+      <div class="no-selection">
+        <span>← SELECT A STATION</span>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal">
+    <h3>INGEST EA WATER QUALITY CSV</h3>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <p>Drop CSV file here or click to browse</p>
+      <p class="drop-hint">Environment Agency Water Quality export format</p>
+    </div>
+    <input type="file" id="file-input" accept=".csv" style="display:none" onchange="handleFileSelect(event)" />
+    <div class="upload-status" id="upload-status"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeUpload()">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';  // same origin
+let selectedStation = null;
+let selectedParam = null;
+let chart = null;
+
+// ─── CLOCK ───
+function updateClock() {
+  document.getElementById('header-time').textContent =
+    new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ─── INIT ───
+async function init() {
+  await loadWaterBody();
+  await loadStations();
+}
+
+async function loadWaterBody() {
+  try {
+    const res = await fetch(`${API}/api/waterbody`);
+    const bodies = await res.json();
+    const panel = document.getElementById('waterbody-panel');
+    if (bodies.length === 0) {
+      panel.innerHTML = '<div class="water-body"><div class="water-body-name" style="color:var(--dim)">No water body found</div></div>';
+      return;
+    }
+    const wb = bodies[0];
+    const name = wb.name?.value || wb['https://uri.etsi.org/ngsi-ld/name']?.value || wb.id.split(':').pop();
+    const id = wb.id.split(':').pop();
+    panel.innerHTML = `
+      <div class="water-body">
+        <div class="water-body-name">${name}</div>
+        <div class="water-body-id">${id}</div>
+      </div>`;
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function loadStations() {
+  try {
+    const res = await fetch(`${API}/api/stations`);
+    const stations = await res.json();
+    const list = document.getElementById('stations-list');
+    list.innerHTML = '';
+    for (const s of stations) {
+      const name = s.name?.value || s['https://uri.etsi.org/ngsi-ld/name']?.value || s.id.split(':').pop();
+      const id = s.eaNotation?.value || s.id.split(':').pop();
+      const div = document.createElement('div');
+      div.className = 'station-item';
+      div.dataset.stationId = id;
+      div.innerHTML = `
+        <div class="station-indicator"></div>
+        <div>
+          <div class="station-name">${name}</div>
+          <div class="station-id">${id}</div>
+        </div>`;
+      div.onclick = () => selectStation(id, name, div);
+      list.appendChild(div);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// ─── STATION SELECTION ───
+async function selectStation(stationId, stationName, el) {
+  document.querySelectorAll('.station-item').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  selectedStation = stationId;
+  selectedParam = null;
+
+  const content = document.getElementById('main-content');
+  content.innerHTML = `
+    <div class="station-header">
+      <h2>${stationName}</h2>
+      <div class="meta">${stationId} &nbsp;·&nbsp; EA FRESHWATER MONITORING</div>
+    </div>
+    <div class="sidebar-label" style="margin-bottom:10px">LATEST READINGS</div>
+    <div class="readings-grid" id="readings-grid">
+      <div style="grid-column:1/-1;font-family:var(--mono);font-size:11px;color:var(--dim)">Loading…</div>
+    </div>
+    <div class="chart-section" id="chart-section" style="display:none">
+      <div class="chart-header">
+        <span class="chart-title" id="chart-title"></span>
+        <span class="chart-subtitle" id="chart-subtitle"></span>
+      </div>
+      <div class="chart-wrap"><canvas id="param-chart"></canvas></div>
+    </div>`;
+
+  await loadLatest(stationId);
+}
+
+async function loadLatest(stationId) {
+  try {
+    const res = await fetch(`${API}/api/stations/${stationId}/latest`);
+    const data = await res.json();
+    renderReadings(data.readings);
+  } catch (e) {
+    document.getElementById('readings-grid').innerHTML =
+      '<div style="color:var(--danger);font-family:var(--mono);font-size:11px">Failed to load readings</div>';
+  }
+}
+
+function renderReadings(readings) {
+  const grid = document.getElementById('readings-grid');
+  const params = ['pH','temperature','dissolvedOxygen','oxygenSaturation','conductivity',
+                  'ammoniacalNitrogen','phosphate','bod','nitrate','nitrite'];
+  const labels = {
+    pH:'pH', temperature:'TEMP', dissolvedOxygen:'DO', oxygenSaturation:'O₂ SAT',
+    conductivity:'COND', ammoniacalNitrogen:'NH₄-N', phosphate:'PO₄',
+    bod:'BOD', nitrate:'NO₃', nitrite:'NO₂'
+  };
+
+  grid.innerHTML = '';
+  for (const p of params) {
+    const r = readings[p];
+    const card = document.createElement('div');
+    card.className = 'reading-card';
+    card.dataset.param = p;
+
+    if (r) {
+      const ts = new Date(r.timestamp).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+      card.innerHTML = `
+        <div class="reading-label">${labels[p]}</div>
+        <div class="reading-value">${r.value}</div>
+        <div class="reading-unit">${r.unit || ''}</div>
+        <div class="reading-time">${ts}</div>`;
+    } else {
+      card.innerHTML = `
+        <div class="reading-label">${labels[p]}</div>
+        <div class="reading-null">—</div>`;
+    }
+
+    card.onclick = () => loadParamHistory(selectedStation, p, card, r?.label || labels[p], r?.unit || '');
+    grid.appendChild(card);
+  }
+}
+
+// ─── PARAM HISTORY ───
+async function loadParamHistory(stationId, param, cardEl, label, unit) {
+  document.querySelectorAll('.reading-card').forEach(x => x.classList.remove('selected'));
+  cardEl.classList.add('selected');
+  selectedParam = param;
+
+  const section = document.getElementById('chart-section');
+  section.style.display = 'block';
+  document.getElementById('chart-title').textContent = label.toUpperCase();
+  document.getElementById('chart-subtitle').textContent = unit;
+
+  try {
+    const res = await fetch(`${API}/api/stations/${stationId}/history/${param}`);
+    const data = await res.json();
+    renderChart(data.data, label, unit);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderChart(series, label, unit) {
+  const canvas = document.getElementById('param-chart');
+  if (chart) { chart.destroy(); chart = null; }
+
+  if (!series || series.length === 0) {
+    canvas.parentElement.innerHTML = '<div class="chart-empty">NO DATA FOR THIS PARAMETER</div>';
+    return;
+  }
+
+  const labels = series.map(d => {
+    const dt = new Date(d.timestamp);
+    return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  });
+  const values = series.map(d => d.value);
+
+  chart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label,
+        data: values,
+        borderColor: '#3ddbd9',
+        backgroundColor: 'rgba(61,219,217,0.06)',
+        borderWidth: 1.5,
+        pointBackgroundColor: '#3ddbd9',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        fill: true,
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f1518',
+          borderColor: '#1e2d30',
+          borderWidth: 1,
+          titleColor: '#5a7a80',
+          bodyColor: '#3ddbd9',
+          titleFont: { family: 'IBM Plex Mono', size: 10 },
+          bodyFont: { family: 'IBM Plex Mono', size: 12 },
+          callbacks: {
+            label: ctx => `${ctx.parsed.y} ${unit}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#1e2d30' },
+          ticks: { color: '#5a7a80', font: { family: 'IBM Plex Mono', size: 10 }, maxTicksLimit: 8 },
+          border: { color: '#1e2d30' }
+        },
+        y: {
+          grid: { color: '#1e2d30' },
+          ticks: { color: '#5a7a80', font: { family: 'IBM Plex Mono', size: 10 } },
+          border: { color: '#1e2d30' }
+        }
+      }
+    }
+  });
+}
+
+// ─── UPLOAD ───
+function openUpload() {
+  document.getElementById('upload-modal').classList.add('open');
+}
+function closeUpload() {
+  document.getElementById('upload-modal').classList.remove('open');
+  document.getElementById('upload-status').style.display = 'none';
+}
+
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) uploadFile(file);
+});
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) uploadFile(file);
+}
+
+async function uploadFile(file) {
+  const status = document.getElementById('upload-status');
+  status.style.display = 'block';
+  status.className = 'upload-status';
+  status.textContent = `Ingesting ${file.name}…`;
+
+  const form = new FormData();
+  form.append('file', file);
+
+  try {
+    const res = await fetch(`${API}/api/ingest/upload`, { method: 'POST', body: form });
+    const data = await res.json();
+    if (res.ok) {
+      status.className = 'upload-status ok';
+      status.textContent = `✓ ${data.entities_parsed} observations — ${data.created} created, ${data.updated} updated, ${data.failed} failed`;
+      // Reload current station if one is selected
+      if (selectedStation) {
+        await loadLatest(selectedStation);
+        if (selectedParam) {
+          const card = document.querySelector(`[data-param="${selectedParam}"]`);
+          if (card) card.click();
+        }
+      }
+      await loadStations();
+    } else {
+      status.className = 'upload-status err';
+      status.textContent = `✗ ${data.detail || 'Upload failed'}`;
+    }
+  } catch (e) {
+    status.className = 'upload-status err';
+    status.textContent = `✗ Network error`;
+  }
+}
+
+// ─── KICK OFF ───
+init();
+</script>
+</body>
+</html>

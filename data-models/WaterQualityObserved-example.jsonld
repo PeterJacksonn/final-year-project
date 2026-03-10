@@ -1,0 +1,105 @@
+{
+  "id": "urn:ngsi-ld:WaterQualityObserved:NE-49301997:2025-03-14T12:59:00Z",
+  "type": "WaterQualityObserved",
+  "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",
+
+  "dateObserved": {
+    "type": "Property",
+    "value": {
+      "@type": "DateTime",
+      "@value": "2025-03-14T12:59:00Z"
+    }
+  },
+
+  "location": {
+    "type": "GeoProperty",
+    "value": {
+      "type": "Point",
+      "coordinates": [-1.4631, 53.374]
+    }
+  },
+
+  "refStation": {
+    "type": "Relationship",
+    "object": "urn:ngsi-ld:WaterQualityStation:NE-49301997"
+  },
+
+  "pH": {
+    "type": "Property",
+    "value": 8.5,
+    "unitCode": "pH",
+    "observedAt": "2025-03-14T12:59:00Z"
+  },
+
+  "temperature": {
+    "type": "Property",
+    "value": 6.4,
+    "unitCode": "CEL",
+    "observedAt": "2025-03-14T12:59:00Z"
+  },
+
+  "dissolvedOxygen": {
+    "type": "Property",
+    "value": 13.1,
+    "unitCode": "M1",
+    "observedAt": "2025-03-14T12:59:00Z"
+  },
+
+  "oxygenSaturation": {
+    "type": "Property",
+    "value": 106.7,
+    "unitCode": "P1",
+    "observedAt": "2025-03-14T12:59:00Z"
+  },
+
+  "conductivity": {
+    "type": "Property",
+    "value": 529,
+    "unitCode": "G42",
+    "observedAt": "2025-03-14T12:59:00Z"
+  },
+
+  "ammoniacalNitrogen": {
+    "type": "Property",
+    "value": 0.03,
+    "unitCode": "M1",
+    "observedAt": "2025-03-14T12:59:00Z"
+  },
+
+  "phosphate": {
+    "type": "Property",
+    "value": 0.028,
+    "unitCode": "M1",
+    "observedAt": "2025-03-14T12:59:00Z"
+  },
+
+  "bod": {
+    "type": "Property",
+    "value": 1.7,
+    "unitCode": "M1",
+    "observedAt": "2025-03-14T12:59:00Z",
+    "description": {
+      "type": "Property",
+      "value": "Biochemical Oxygen Demand - 5 Day ATU"
+    }
+  },
+
+  "nitrate": {
+    "type": "Property",
+    "value": 1.19,
+    "unitCode": "M1",
+    "observedAt": "2025-03-14T12:59:00Z"
+  },
+
+  "nitrite": {
+    "type": "Property",
+    "value": 0.0084,
+    "unitCode": "M1",
+    "observedAt": "2025-03-14T12:59:00Z"
+  },
+
+  "eaSamplingPurpose": {
+    "type": "Property",
+    "value": "ENVIRONMENTAL MONITORING STATUTORY (EU DIRECTIVES)"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "urn:ngsi-ld:WaterQualityStation:NE-49301997",
+  "type": "WaterQualityStation",
+  "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",
+  "name": {
+    "type": "Property",
+    "value": "Sheaf at Granville Square South U/S Porter Brook"
+  },
+  "eaNotation": {
+    "type": "Property",
+    "value": "NE-49301997"
+  },
+  "eaSamplingPointUrl": {
+    "type": "Property",
+    "value": "https://environment.data.gov.uk/water-quality/id/sampling-point/NE-49301997"
+  },
+  "samplingPointType": {
+    "type": "Property",
+    "value": "FRESHWATER - RIVERS"
+  },
+  "location": {
+    "type": "GeoProperty",
+    "value": {
+      "type": "Point",
+      "coordinates": [-1.4631, 53.374]
+    }
+  },
+  "isPartOf": {
+    "type": "Relationship",
+    "object": "urn:ngsi-ld:WaterBody:GB104027057750"
+  },
+  "monitoredParameters": {
+    "type": "Property",
+    "value": [
+      "pH",
+      "temperature",
+      "dissolvedOxygen",
+      "oxygenSaturation",
+      "conductivity",
+      "ammoniacalNitrogen",
+      "phosphate",
+      "bod",
+      "nitrate",
+      "nitrite"
+    ]
+  }
+}
