@@ -1,0 +1,25 @@
+{
+  "id": "urn:ngsi-ld:WaterQualityStation:NE-49302001",
+  "type": "WaterQualityStation",
+  "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",
+  "name": {
+    "type": "Property",
+    "value": "Sheaf at Millhouses Park"
+  },
+  "eaNotation": {
+    "type": "Property",
+    "value": "NE-49302001"
+  },
+  "samplingPointType": {
+    "type": "Property",
+    "value": "FRESHWATER - RIVERS"
+  },
+  "location": {
+    "type": "GeoProperty",
+    "value": { "type": "Point", "coordinates": [-1.4953, 53.346] }
+  },
+  "isPartOf": {
+    "type": "Relationship",
+    "object": "urn:ngsi-ld:WaterBody:GB104027057750"
+  }
+}

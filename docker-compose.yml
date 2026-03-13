@@ -61,7 +61,7 @@ services:
       - POSTGRES_PASSWORD=quantumleap
     volumes:
       - timescale-db:/var/lib/postgresql/data
-      - ./scripts/db-init:/docker-entrypoint-initdb.d
+      - ./docker/db-init:/docker-entrypoint-initdb.d
 
 volumes:
   mongo-db:
