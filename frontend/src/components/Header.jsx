@@ -1,25 +1,83 @@
 import { useState, useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 
-export default function Header({ waterBody }) {
+export default function Header() {
   const [time, setTime] = useState(new Date())
+  const location = useLocation()
+
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(t)
   }, [])
 
-  const name = waterBody?.['https://uri.etsi.org/ngsi-ld/name']?.value
-    || waterBody?.name?.value
-    || 'Water Quality Monitor'
+  const navLinks = [
+    { to: '/dashboard', label: 'Dashboard' },
+    { to: '/map',       label: 'Map' },
+    { to: '/entities',  label: 'Entities' },
+  ]
 
   return (
-    <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-        <span className="font-semibold text-gray-800 tracking-tight">{name}</span>
+    <header style={{
+      background: 'var(--color-primary)',
+      color: '#fff',
+      padding: '0 2rem',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '2rem',
+      height: '52px',
+      borderBottom: '3px solid var(--color-primary-dark)',
+      flexShrink: 0,
+    }}>
+      {/* Brand */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <div style={{
+          width: '8px', height: '8px', borderRadius: '50%',
+          background: 'var(--tol-cyan)',
+          boxShadow: '0 0 6px var(--tol-cyan)',
+          animation: 'pulse 2s infinite',
+        }} />
+        <span style={{ fontWeight: 600, letterSpacing: '0.03em', fontSize: '0.9rem' }}>
+          FIWARE Water Quality Monitor
+        </span>
       </div>
-      <span className="text-xs text-gray-400 font-mono">
+
+      {/* Nav */}
+      <nav style={{ display: 'flex', gap: '0.25rem' }}>
+        {navLinks.map(({ to, label }) => {
+          const active = location.pathname.startsWith(to)
+          return (
+            <Link key={to} to={to} style={{
+              color: active ? '#fff' : 'rgba(255,255,255,0.7)',
+              textDecoration: 'none',
+              padding: '0.3rem 0.75rem',
+              borderRadius: '3px',
+              fontSize: '0.85rem',
+              background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
+              transition: 'background 0.15s, color 0.15s',
+            }}>
+              {label}
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* Clock */}
+      <span style={{
+        marginLeft: 'auto',
+        fontFamily: 'IBM Plex Mono, monospace',
+        fontSize: '0.75rem',
+        color: 'rgba(255,255,255,0.6)',
+        letterSpacing: '0.02em',
+      }}>
         {time.toISOString().replace('T', ' ').slice(0, 19)} UTC
       </span>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
     </header>
   )
 }
