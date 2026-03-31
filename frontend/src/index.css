@@ -1,1 +1,248 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
+
+/* ─── Paul Tol Bright Scheme (colour-blind safe) ─────────────────────────── */
+/* Tol (2021) https://personal.sron.nl/~pault/                                */
+:root {
+    /* Tol bright qualitative colours */
+    --tol-blue:   #4477AA;
+    --tol-red:    #EE6677;
+    --tol-green:  #228833;
+    --tol-yellow: #CCBB44;
+    --tol-cyan:   #66CCEE;
+    --tol-purple: #AA3377;
+    --tol-grey:   #BBBBBB;
+
+    /* WFD ecological status classifications → Tol bright mapping */
+    --wfd-high:     #66CCEE;  /* cyan   */
+    --wfd-good:     #228833;  /* green  */
+    --wfd-moderate: #CCBB44;  /* yellow */
+    --wfd-poor:     #EE6677;  /* red    */
+    --wfd-bad:      #AA3377;  /* purple */
+
+    /* UI semantic tokens */
+    --color-primary:       #4477AA;
+    --color-primary-dark:  #2d5080;
+    --color-primary-light: #dbeaf5;
+    --color-danger:        #EE6677;
+    --color-success:       #228833;
+    --color-warning:       #CCBB44;
+    --color-info:          #66CCEE;
+
+    /* Neutral UI */
+    --color-bg:            #f5f7fa;
+    --color-surface:       #ffffff;
+    --color-border:        #dde2ea;
+    --color-border-strong: #b0bac8;
+    --color-text:          #1a2332;
+    --color-text-muted:    #5a6a7e;
+    --color-text-faint:    #8a9aae;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Typography ─────────────────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+    line-height: 1.3;
+}
+
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1rem; }
+
+code, .mono {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85em;
+}
+
+/* ─── WFD Status Badges ───────────────────────────────────────────────────── */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+}
+.status-badge--high     { background: var(--wfd-high);     color: #1a2332; }
+.status-badge--good     { background: var(--wfd-good); }
+.status-badge--moderate { background: var(--wfd-moderate); color: #1a2332; }
+.status-badge--poor     { background: var(--wfd-poor); }
+.status-badge--bad      { background: var(--wfd-bad); }
+.status-badge--unknown  { background: var(--tol-grey); color: #1a2332; }
+
+/* ─── Cards ───────────────────────────────────────────────────────────────── */
+.card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 1.25rem;
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 1rem;
+    border-radius: 4px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+.btn-primary:hover { background: var(--color-primary-dark); border-color: var(--color-primary-dark); }
+
+.btn-secondary {
+    background: #fff;
+    color: var(--color-primary);
+    border-color: var(--color-border-strong);
+}
+.btn-secondary:hover { background: var(--color-primary-light); border-color: var(--color-primary); }
+
+.btn-danger {
+    background: #fff;
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+.btn-danger:hover { background: #fdf0f1; }
+
+.btn-sm {
+    padding: 0.3rem 0.65rem;
+    font-size: 0.8rem;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ─── Form Elements ───────────────────────────────────────────────────────── */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.form-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 4px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.875rem;
+    color: var(--color-text);
+    background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+}
+.form-input:focus,
+.form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+.form-input::placeholder { color: var(--color-text-faint); }
+
+.form-hint {
+    font-size: 0.75rem;
+    color: var(--color-text-faint);
+}
+
+/* ─── Tables ──────────────────────────────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+.data-table th {
+    background: #f0f3f7;
+    text-align: left;
+    padding: 0.6rem 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--color-border);
+}
+.data-table td {
+    padding: 0.7rem 0.875rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+    vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #f8fafc; }
+
+/* ─── Alerts ──────────────────────────────────────────────────────────────── */
+.alert {
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    border: 1px solid transparent;
+}
+.alert-error   { background: #fdf0f1; border-color: var(--color-danger); color: #8b1a24; }
+.alert-success { background: #f0f7f0; border-color: var(--color-success); color: #1a4d22; }
+.alert-info    { background: #eef8fd; border-color: var(--color-info); color: #1a4d5c; }
+
+/* ─── Layout Utilities ────────────────────────────────────────────────────── */
+.page-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-content {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* ─── Divider ─────────────────────────────────────────────────────────────── */
+.divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 1rem 0;
+}
