@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import axios from 'axios'
 import Header from '../components/Header'
 
@@ -92,10 +91,18 @@ async function deleteEntity(id) {
   await api.delete(`/entities/${encodeURIComponent(id)}`)
 }
 
+async function uploadCsv(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await api.post('/ingest/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function shortId(id) {
-  // Strip URN prefix for display: urn:ngsi-ld:WaterBody:GB112 → GB112
   return id?.split(':').slice(3).join(':') || id
 }
 
@@ -109,6 +116,119 @@ function extractProp(entity, key) {
     return coords ? `${coords[1].toFixed(4)}, ${coords[0].toFixed(4)}` : '—'
   }
   return String(val)
+}
+
+// ─── CSV Upload Modal ─────────────────────────────────────────────────────────
+
+function CsvUploadModal({ onClose }) {
+  const [file, setFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadResult, setUploadResult] = useState(null)
+  const [uploadError, setUploadError] = useState(null)
+  const fileInputRef = useRef(null)
+
+  const handleUpload = async () => {
+    if (!file) return
+    setUploading(true)
+    setUploadError(null)
+    setUploadResult(null)
+    try {
+      const result = await uploadCsv(file)
+      setUploadResult(result)
+      setFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    } catch (err) {
+      setUploadError(err.response?.data?.detail || err.message || 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) onClose()
+  }
+
+  return (
+    <div
+      onClick={handleBackdropClick}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.35)',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem',
+      }}
+    >
+      <div
+        className="card"
+        style={{
+          width: '100%',
+          maxWidth: '480px',
+          padding: '1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.25rem',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1rem', marginBottom: '0.2rem' }}>Upload Observation Data</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: 0 }}>
+              Station ID and location are read from the CSV — observations for all
+              stations in the file will be ingested.
+            </p>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={onClose} style={{ flexShrink: 0 }}>
+            Close
+          </button>
+        </div>
+
+        <div className="divider" />
+
+        <div className="form-group" style={{ gap: '0.4rem' }}>
+          <label className="form-label">CSV File</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            className="form-input"
+            style={{ cursor: 'pointer' }}
+            onChange={e => {
+              setFile(e.target.files[0] || null)
+              setUploadResult(null)
+              setUploadError(null)
+            }}
+          />
+          <span className="form-hint">EA format CSV from environment.data.gov.uk</span>
+        </div>
+
+        {uploadError && (
+          <div className="alert alert-error">{uploadError}</div>
+        )}
+
+        {uploadResult && (
+          <div className="alert alert-success">
+            <strong>Upload complete.</strong>{' '}
+            {uploadResult.parsed} observations parsed —{' '}
+            {uploadResult.created} created, {uploadResult.updated} updated
+            {uploadResult.failed > 0 && `, ${uploadResult.failed} failed`}.
+          </div>
+        )}
+
+        <button
+          className="btn btn-primary"
+          onClick={handleUpload}
+          disabled={!file || uploading}
+          style={{ alignSelf: 'flex-start' }}
+        >
+          {uploading ? 'Uploading…' : 'Upload CSV'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 // ─── Entity Form ──────────────────────────────────────────────────────────────
@@ -339,6 +459,7 @@ export default function EntityManager() {
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState(null)
+  const [showCsvUpload, setShowCsvUpload] = useState(false)
 
   const loadType = useCallback(async (type) => {
     setLoadingState(prev => ({ ...prev, [type]: true }))
@@ -352,7 +473,6 @@ export default function EntityManager() {
     }
   }, [])
 
-  // Load all types on mount (needed for relationship dropdowns)
   useEffect(() => {
     Object.keys(ENTITY_TYPES).forEach(loadType)
   }, [loadType])
@@ -389,11 +509,16 @@ export default function EntityManager() {
 
       <div className="page-content">
         {/* Page title */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1>Entity Management</h1>
-          <p style={{ color: 'var(--color-text-muted)', marginTop: '0.25rem', fontSize: '0.875rem' }}>
-            Create and manage NGSI-LD entities in the Orion-LD context broker
-          </p>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <div>
+            <h1>Entity Management</h1>
+            <p style={{ color: 'var(--color-text-muted)', marginTop: '0.25rem', fontSize: '0.875rem' }}>
+              Create and manage NGSI-LD entities in the Orion-LD context broker
+            </p>
+          </div>
+          <button className="btn btn-secondary" onClick={() => setShowCsvUpload(true)}>
+            Upload CSV
+          </button>
         </div>
 
         {message && (
@@ -486,6 +611,10 @@ export default function EntityManager() {
           )}
         </div>
       </div>
+
+      {showCsvUpload && (
+        <CsvUploadModal onClose={() => setShowCsvUpload(false)} />
+      )}
     </div>
   )
 }
