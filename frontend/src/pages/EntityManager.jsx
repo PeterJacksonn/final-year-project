@@ -46,10 +46,10 @@ const ENTITY_TYPES = {
     displayColumns: ['id', 'name', 'wbId'],
   },
 
-  MonitoringStation: {
-    label: 'Monitoring Stations',
-    singular: 'Monitoring Station',
-    idPrefix: 'urn:ngsi-ld:MonitoringStation:',
+  WaterQualityStation: {
+    label: 'Water Quality Stations',
+    singular: 'Water Quality Station',
+    idPrefix: 'urn:ngsi-ld:WaterQualityStation:',
     fields: [
       { key: 'name', label: 'Station Name', type: 'text', placeholder: 'e.g. Don at Meadowhall', required: true },
       { key: 'eaStationId', label: 'EA Station ID', type: 'text', placeholder: 'e.g. 42435', required: true },
@@ -59,8 +59,8 @@ const ENTITY_TYPES = {
       { key: 'elevation', label: 'Elevation (m)', type: 'number', placeholder: 'Optional' },
     ],
     toNgsiLd: (id, values) => ({
-      id: `urn:ngsi-ld:MonitoringStation:${id}`,
-      type: 'MonitoringStation',
+      id: `urn:ngsi-ld:WaterQualityStation:${id}`,
+      type: 'WaterQualityStation',
       name: { type: 'Property', value: values.name },
       eaStationId: { type: 'Property', value: values.eaStationId },
       waterBody: { type: 'Relationship', object: values.waterBody },
@@ -290,9 +290,9 @@ function EntityList({ typeKey, entities, onDelete, loading }) {
             <th>ID</th>
             <th>Name</th>
             {typeKey === 'WaterBody' && <th>EA Water Body ID</th>}
-            {typeKey === 'MonitoringStation' && <th>EA Station ID</th>}
+            {typeKey === 'WaterQualityStation' && <th>EA Station ID</th>}
             {typeKey === 'WaterBody' && <th>River Basin</th>}
-            {typeKey === 'MonitoringStation' && <th>Location</th>}
+            {typeKey === 'WaterQualityStation' && <th>Location</th>}
             <th style={{ width: 80 }}>Actions</th>
           </tr>
         </thead>
@@ -306,9 +306,9 @@ function EntityList({ typeKey, entities, onDelete, loading }) {
               </td>
               <td style={{ fontWeight: 500 }}>{extractProp(entity, 'name')}</td>
               {typeKey === 'WaterBody' && <td><code className="mono" style={{ fontSize: '0.75rem' }}>{extractProp(entity, 'wbId')}</code></td>}
-              {typeKey === 'MonitoringStation' && <td><code className="mono" style={{ fontSize: '0.75rem' }}>{extractProp(entity, 'eaStationId')}</code></td>}
+              {typeKey === 'WaterQualityStation' && <td><code className="mono" style={{ fontSize: '0.75rem' }}>{extractProp(entity, 'eaStationId')}</code></td>}
               {typeKey === 'WaterBody' && <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>{extractProp(entity, 'riverBasinDistrict')}</td>}
-              {typeKey === 'MonitoringStation' && <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', fontFamily: 'IBM Plex Mono, monospace' }}>{extractProp(entity, 'location')}</td>}
+              {typeKey === 'WaterQualityStation' && <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', fontFamily: 'IBM Plex Mono, monospace' }}>{extractProp(entity, 'location')}</td>}
               <td>
                 <button
                   className="btn btn-danger btn-sm"
@@ -333,7 +333,7 @@ export default function EntityManager() {
   const [entities, setEntities] = useState({
     RiverBasinDistrict: [],
     WaterBody: [],
-    MonitoringStation: [],
+    WaterQualityStation: [],
   })
   const [loadingState, setLoadingState] = useState({})
   const [showForm, setShowForm] = useState(false)
