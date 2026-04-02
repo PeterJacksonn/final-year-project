@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { getWaterBody, getStations, getLatest, getHistory } from '../api/client'
+import { useSearchParams, Link } from 'react-router-dom'
+import { getStations, getLatest, getHistory } from '../api/client'
 import Sidebar from '../components/Sidebar'
 import Header from '../components/Header'
 import ParameterCard from '../components/ParameterCard'
 import ParameterChart from '../components/ParameterChart'
+import ComparisonChart, { TOL_COLOURS } from '../components/ComparisonChart'
 
-// Station name helper — handles expanded JSON-LD key
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function stationName(station) {
   return station?.['https://uri.etsi.org/ngsi-ld/name']?.value
     || station?.name?.value
@@ -15,54 +17,156 @@ function stationName(station) {
     || 'Unknown Station'
 }
 
-// Extract EA notation from full URN or plain string
 function stationNotation(station) {
   return station?.eaNotation?.value || station?.id?.split(':').pop()
 }
 
-export default function Dashboard() {
-  const [searchParams] = useSearchParams()
+const PARAMETERS = [
+  { key: 'pH',                 label: 'pH' },
+  { key: 'temperature',        label: 'Temperature' },
+  { key: 'dissolvedOxygen',    label: 'Dissolved Oxygen' },
+  { key: 'oxygenSaturation',   label: 'O₂ Saturation' },
+  { key: 'conductivity',       label: 'Conductivity' },
+  { key: 'ammoniacalNitrogen', label: 'NH₄-N' },
+  { key: 'phosphate',          label: 'Phosphate' },
+  { key: 'bod',                label: 'BOD' },
+  { key: 'nitrate',            label: 'Nitrate' },
+  { key: 'nitrite',            label: 'Nitrite' },
+]
 
-  const [waterBody, setWaterBody] = useState(null)
+// ─── Multi-station comparison view ───────────────────────────────────────────
+
+function ComparisonView({ stationsParam }) {
+  const [stations, setStations] = useState([])
+  const [selectedParam, setSelectedParam] = useState('pH')
+  const [histories, setHistories] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Match URL IDs to station objects
+  useEffect(() => {
+    const ids = stationsParam.split(',').filter(Boolean)
+    getStations().then(r => {
+      const matched = ids
+        .map(id => r.data.find(s => stationNotation(s) === id))
+        .filter(Boolean)
+      setStations(matched)
+    })
+  }, [stationsParam])
+
+  // Fetch history for all stations whenever stations list or param changes
+  useEffect(() => {
+    if (stations.length === 0) return
+    setLoading(true)
+    setError(null)
+    Promise.all(
+      stations.map(s => {
+        const id = stationNotation(s)
+        return getHistory(id, selectedParam).then(r => ({
+          id,
+          name: stationName(s),
+          data: r.data.data,
+          meta: r.data.meta,
+        }))
+      })
+    )
+      .then(setHistories)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [stations, selectedParam])
+
+  const meta = histories[0]?.meta || null
+
+  return (
+    <div className="page-layout">
+      <Header />
+      <div className="page-content">
+
+        {/* Station chips + back link */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+          <Link to="/map" className="btn btn-secondary btn-sm" style={{ flexShrink: 0 }}>
+            ← Map
+          </Link>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {stations.map((s, i) => (
+              <span key={s.id} style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                padding: '0.25rem 0.75rem',
+                background: 'white',
+                border: `2px solid ${TOL_COLOURS[i % TOL_COLOURS.length]}`,
+                borderRadius: '20px',
+                fontSize: '0.8rem', fontWeight: 500,
+              }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: TOL_COLOURS[i % TOL_COLOURS.length],
+                  flexShrink: 0,
+                }} />
+                {stationName(s)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Parameter selector */}
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: '0.4rem',
+          marginBottom: '1.5rem',
+          paddingBottom: '1.5rem',
+          borderBottom: '1px solid var(--color-border)',
+        }}>
+          {PARAMETERS.map(p => (
+            <button
+              key={p.key}
+              onClick={() => setSelectedParam(p.key)}
+              className={`btn btn-sm ${selectedParam === p.key ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Chart */}
+        {error && <div className="alert alert-error">{error}</div>}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--color-text-muted)' }}>
+            Loading…
+          </div>
+        )}
+        {!loading && !error && histories.length > 0 && meta && (
+          <ComparisonChart histories={histories} meta={meta} />
+        )}
+
+      </div>
+    </div>
+  )
+}
+
+// ─── Single-station view ──────────────────────────────────────────────────────
+
+function SingleStationView({ stationParam }) {
   const [stations, setStations] = useState([])
   const [selectedStation, setSelectedStation] = useState(null)
   const [readings, setReadings] = useState({})
   const [selectedParam, setSelectedParam] = useState(null)
   const [history, setHistory] = useState(null)
 
-  // Load water body + stations
   useEffect(() => {
-    getWaterBody().then(r => setWaterBody(r.data[0]))
     getStations().then(r => setStations(r.data))
   }, [])
 
-  // Once stations loaded, check URL params and auto-select
+  // Auto-select station from URL param once stations are loaded
   useEffect(() => {
-    if (stations.length === 0) return
-
-    const singleId = searchParams.get('station')
-    if (singleId) {
-      const match = stations.find(s => stationNotation(s) === singleId)
-      if (match) setSelectedStation(match)
-      return
-    }
-
-    // Multi-station from map — just select the first one for now
-    // (full comparison view can come later)
-    const multiIds = searchParams.get('stations')
-    if (multiIds) {
-      const ids = multiIds.split(',')
-      const match = stations.find(s => stationNotation(s) === ids[0])
-      if (match) setSelectedStation(match)
-    }
-  }, [stations, searchParams])
+    if (stations.length === 0 || !stationParam) return
+    const match = stations.find(s => stationNotation(s) === stationParam)
+    if (match) setSelectedStation(match)
+  }, [stations, stationParam])
 
   // Poll latest readings every 5 seconds when a station is selected
   useEffect(() => {
     if (!selectedStation) return
-    const notation = stationNotation(selectedStation)
-    const fetch = () =>
-      getLatest(notation).then(r => setReadings(r.data.readings))
+    const id = stationNotation(selectedStation)
+    const fetch = () => getLatest(id).then(r => setReadings(r.data.readings))
     fetch()
     const interval = setInterval(fetch, 5000)
     return () => clearInterval(interval)
@@ -78,16 +182,12 @@ export default function Dashboard() {
   const handleSelectParam = useCallback((param) => {
     if (!selectedStation) return
     setSelectedParam(param)
-    const notation = stationNotation(selectedStation)
-    getHistory(notation, param).then(r => setHistory(r.data))
+    const id = stationNotation(selectedStation)
+    getHistory(id, param).then(r => setHistory(r.data))
   }, [selectedStation])
 
   const name = stationName(selectedStation)
   const notation = stationNotation(selectedStation)
-
-  // Warn if coming from multi-station map selection
-  const multiIds = searchParams.get('stations')
-  const isMultiContext = multiIds && multiIds.split(',').length > 1
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 text-gray-900">
@@ -105,17 +205,8 @@ export default function Dashboard() {
             </div>
           ) : (
             <>
-              {isMultiContext && (
-                <div className="alert alert-info mb-4" style={{ fontSize: '0.8rem' }}>
-                  Showing {multiIds.split(',').length} stations were selected on the map.
-                  Multi-station comparison view coming soon — currently showing {name}.
-                </div>
-              )}
-
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  {name}
-                </h2>
+                <h2 className="text-xl font-semibold text-gray-800">{name}</h2>
                 <p className="text-sm text-gray-500 mt-1">
                   {notation} · EA Freshwater Monitoring
                 </p>
@@ -146,4 +237,18 @@ export default function Dashboard() {
       </div>
     </div>
   )
+}
+
+// ─── Router ───────────────────────────────────────────────────────────────────
+
+export default function Dashboard() {
+  const [searchParams] = useSearchParams()
+  const stationsParam = searchParams.get('stations')
+  const stationParam  = searchParams.get('station')
+
+  if (stationsParam && stationsParam.split(',').filter(Boolean).length > 1) {
+    return <ComparisonView stationsParam={stationsParam} />
+  }
+
+  return <SingleStationView stationParam={stationParam} />
 }

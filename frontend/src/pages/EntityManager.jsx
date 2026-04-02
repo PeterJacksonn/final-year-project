@@ -30,7 +30,6 @@ const ENTITY_TYPES = {
     idPrefix: 'urn:ngsi-ld:WaterBody:',
     fields: [
       { key: 'name', label: 'Name', type: 'text', placeholder: 'e.g. River Don at Sheffield', required: true },
-      { key: 'wbId', label: 'EA Water Body ID', type: 'text', placeholder: 'e.g. GB112071065780', required: true },
       { key: 'riverBasinDistrict', label: 'River Basin District', type: 'relationship', relType: 'RiverBasinDistrict', required: true },
       { key: 'waterBodyType', label: 'Water Body Type', type: 'select', options: ['river', 'lake', 'transitional', 'coastal', 'groundwater'] },
     ],
@@ -38,30 +37,31 @@ const ENTITY_TYPES = {
       id: `urn:ngsi-ld:WaterBody:${id}`,
       type: 'WaterBody',
       name: { type: 'Property', value: values.name },
-      wbId: { type: 'Property', value: values.wbId },
       riverBasinDistrict: { type: 'Relationship', object: values.riverBasinDistrict },
       ...(values.waterBodyType && { waterBodyType: { type: 'Property', value: values.waterBodyType } }),
     }),
-    displayColumns: ['id', 'name', 'wbId'],
+    displayColumns: ['id', 'name'],
   },
 
   WaterQualityStation: {
     label: 'Water Quality Stations',
     singular: 'Water Quality Station',
     idPrefix: 'urn:ngsi-ld:WaterQualityStation:',
+    autoIdFrom: 'eaNotation',  // entity ID is derived from this field — no separate ID input
     fields: [
       { key: 'name', label: 'Station Name', type: 'text', placeholder: 'e.g. Don at Meadowhall', required: true },
-      { key: 'eaStationId', label: 'EA Station ID', type: 'text', placeholder: 'e.g. 42435', required: true },
+      { key: 'eaNotation', label: 'EA Notation', type: 'text', placeholder: 'e.g. NE-49301997', required: true,
+        hint: 'EA sampling point notation — becomes the entity ID suffix' },
       { key: 'waterBody', label: 'Water Body', type: 'relationship', relType: 'WaterBody', required: true },
       { key: 'latitude', label: 'Latitude', type: 'number', placeholder: 'e.g. 53.4084', required: true },
       { key: 'longitude', label: 'Longitude', type: 'number', placeholder: 'e.g. -1.4612', required: true },
       { key: 'elevation', label: 'Elevation (m)', type: 'number', placeholder: 'Optional' },
     ],
-    toNgsiLd: (id, values) => ({
-      id: `urn:ngsi-ld:WaterQualityStation:${id}`,
+    toNgsiLd: (_id, values) => ({
+      id: `urn:ngsi-ld:WaterQualityStation:${values.eaNotation}`,
       type: 'WaterQualityStation',
       name: { type: 'Property', value: values.name },
-      eaStationId: { type: 'Property', value: values.eaStationId },
+      eaNotation: { type: 'Property', value: values.eaNotation },
       waterBody: { type: 'Relationship', object: values.waterBody },
       location: {
         type: 'GeoProperty',
@@ -72,7 +72,7 @@ const ENTITY_TYPES = {
       },
       ...(values.elevation && { elevation: { type: 'Property', value: parseFloat(values.elevation), unitCode: 'MTR' } }),
     }),
-    displayColumns: ['id', 'name', 'eaStationId'],
+    displayColumns: ['id', 'name', 'eaNotation'],
   },
 }
 
@@ -244,9 +244,9 @@ function EntityForm({ typeKey, existingEntities, onSubmit, onCancel, loading }) 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
-    if (!idSuffix.trim()) { setError('Entity ID is required'); return }
     const missing = config.fields.filter(f => f.required && !values[f.key])
     if (missing.length) { setError(`Required: ${missing.map(f => f.label).join(', ')}`); return }
+    if (!config.autoIdFrom && !idSuffix.trim()) { setError('Entity ID is required'); return }
     try {
       const entity = config.toNgsiLd(idSuffix.trim(), values)
       await onSubmit(entity)
@@ -259,33 +259,36 @@ function EntityForm({ typeKey, existingEntities, onSubmit, onCancel, loading }) 
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {error && <div className="alert alert-error">{error}</div>}
 
-      <div className="form-group">
-        <label className="form-label">Entity ID <span style={{ color: 'var(--color-danger)' }}>*</span></label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-          <span style={{
-            padding: '0.5rem 0.6rem',
-            background: '#f0f3f7',
-            border: '1px solid var(--color-border-strong)',
-            borderRight: 'none',
-            borderRadius: '4px 0 0 4px',
-            fontSize: '0.75rem',
-            color: 'var(--color-text-muted)',
-            fontFamily: 'IBM Plex Mono, monospace',
-            whiteSpace: 'nowrap',
-          }}>
-            {config.idPrefix}
-          </span>
-          <input
-            className="form-input"
-            style={{ borderRadius: '0 4px 4px 0' }}
-            value={idSuffix}
-            onChange={e => setIdSuffix(e.target.value)}
-            placeholder="unique-identifier"
-            required
-          />
+      {/* Only show the manual entity ID field for types that don't auto-derive it */}
+      {!config.autoIdFrom && (
+        <div className="form-group">
+          <label className="form-label">Entity ID <span style={{ color: 'var(--color-danger)' }}>*</span></label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+            <span style={{
+              padding: '0.5rem 0.6rem',
+              background: '#f0f3f7',
+              border: '1px solid var(--color-border-strong)',
+              borderRight: 'none',
+              borderRadius: '4px 0 0 4px',
+              fontSize: '0.75rem',
+              color: 'var(--color-text-muted)',
+              fontFamily: 'IBM Plex Mono, monospace',
+              whiteSpace: 'nowrap',
+            }}>
+              {config.idPrefix}
+            </span>
+            <input
+              className="form-input"
+              style={{ borderRadius: '0 4px 4px 0' }}
+              value={idSuffix}
+              onChange={e => setIdSuffix(e.target.value)}
+              placeholder="unique-identifier"
+              required
+            />
+          </div>
+          <span className="form-hint">Full ID: {config.idPrefix}{idSuffix || '…'}</span>
         </div>
-        <span className="form-hint">Full ID: {config.idPrefix}{idSuffix || '…'}</span>
-      </div>
+      )}
 
       {config.fields.map(field => {
         if (field.type === 'relationship') {
@@ -335,6 +338,7 @@ function EntityForm({ typeKey, existingEntities, onSubmit, onCancel, loading }) 
           )
         }
 
+        const isAutoIdField = config.autoIdFrom === field.key
         return (
           <div className="form-group" key={field.key}>
             <label className="form-label">
@@ -349,6 +353,16 @@ function EntityForm({ typeKey, existingEntities, onSubmit, onCancel, loading }) 
               onChange={e => set(field.key, e.target.value)}
               required={field.required}
             />
+            {field.hint && (
+              <span className="form-hint">{field.hint}</span>
+            )}
+            {isAutoIdField && values[field.key] && (
+              <span className="form-hint">
+                Full ID: <code style={{ fontFamily: 'IBM Plex Mono, monospace' }}>
+                  {config.idPrefix}{values[field.key]}
+                </code>
+              </span>
+            )}
           </div>
         )
       })}
@@ -407,10 +421,9 @@ function EntityList({ typeKey, entities, onDelete, loading }) {
       <table className="data-table">
         <thead>
           <tr>
-            <th>ID</th>
+            {typeKey === 'RiverBasinDistrict' && <th>ID</th>}
             <th>Name</th>
-            {typeKey === 'WaterBody' && <th>EA Water Body ID</th>}
-            {typeKey === 'WaterQualityStation' && <th>EA Station ID</th>}
+            {typeKey === 'WaterQualityStation' && <th>ID</th>}
             {typeKey === 'WaterBody' && <th>River Basin</th>}
             {typeKey === 'WaterQualityStation' && <th>Location</th>}
             <th style={{ width: 80 }}>Actions</th>
@@ -419,14 +432,15 @@ function EntityList({ typeKey, entities, onDelete, loading }) {
         <tbody>
           {entities.map(entity => (
             <tr key={entity.id}>
-              <td>
-                <code className="mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                  {shortId(entity.id)}
-                </code>
-              </td>
+              {typeKey === 'RiverBasinDistrict' && (
+                <td>
+                  <code className="mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                    {shortId(entity.id)}
+                  </code>
+                </td>
+              )}
               <td style={{ fontWeight: 500 }}>{extractProp(entity, 'name')}</td>
-              {typeKey === 'WaterBody' && <td><code className="mono" style={{ fontSize: '0.75rem' }}>{extractProp(entity, 'wbId')}</code></td>}
-              {typeKey === 'WaterQualityStation' && <td><code className="mono" style={{ fontSize: '0.75rem' }}>{extractProp(entity, 'eaStationId')}</code></td>}
+              {typeKey === 'WaterQualityStation' && <td><code className="mono" style={{ fontSize: '0.75rem' }}>{extractProp(entity, 'eaNotation')}</code></td>}
               {typeKey === 'WaterBody' && <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>{extractProp(entity, 'riverBasinDistrict')}</td>}
               {typeKey === 'WaterQualityStation' && <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', fontFamily: 'IBM Plex Mono, monospace' }}>{extractProp(entity, 'location')}</td>}
               <td>
