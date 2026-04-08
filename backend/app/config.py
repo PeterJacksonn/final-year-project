@@ -39,7 +39,6 @@ PARAMETER_META = {
 
 # Valid NGSI-LD entity types for the entity manager
 MANAGEABLE_ENTITY_TYPES = [
-    "RiverBasinDistrict",
     "WaterBody",
     "WaterQualityStation",
 ]

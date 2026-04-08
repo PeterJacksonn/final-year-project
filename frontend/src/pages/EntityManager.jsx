@@ -7,37 +7,18 @@ const api = axios.create({ baseURL: '/api' })
 // ─── Entity type config ──────────────────────────────────────────────────────
 
 const ENTITY_TYPES = {
-  RiverBasinDistrict: {
-    label: 'River Basin Districts',
-    singular: 'River Basin District',
-    idPrefix: 'urn:ngsi-ld:RiverBasinDistrict:',
-    fields: [
-      { key: 'name', label: 'Name', type: 'text', placeholder: 'e.g. Humber', required: true },
-      { key: 'description', label: 'Description', type: 'text', placeholder: 'Optional description' },
-    ],
-    toNgsiLd: (id, values) => ({
-      id: `urn:ngsi-ld:RiverBasinDistrict:${id}`,
-      type: 'RiverBasinDistrict',
-      name: { type: 'Property', value: values.name },
-      ...(values.description && { description: { type: 'Property', value: values.description } }),
-    }),
-    displayColumns: ['id', 'name'],
-  },
-
   WaterBody: {
     label: 'Water Bodies',
     singular: 'Water Body',
     idPrefix: 'urn:ngsi-ld:WaterBody:',
     fields: [
       { key: 'name', label: 'Name', type: 'text', placeholder: 'e.g. River Don at Sheffield', required: true },
-      { key: 'riverBasinDistrict', label: 'River Basin District', type: 'relationship', relType: 'RiverBasinDistrict', required: true },
       { key: 'waterBodyType', label: 'Water Body Type', type: 'select', options: ['river', 'lake', 'transitional', 'coastal', 'groundwater'] },
     ],
     toNgsiLd: (id, values) => ({
       id: `urn:ngsi-ld:WaterBody:${id}`,
       type: 'WaterBody',
       name: { type: 'Property', value: values.name },
-      riverBasinDistrict: { type: 'Relationship', object: values.riverBasinDistrict },
       ...(values.waterBodyType && { waterBodyType: { type: 'Property', value: values.waterBodyType } }),
     }),
     displayColumns: ['id', 'name'],
@@ -421,10 +402,8 @@ function EntityList({ typeKey, entities, onDelete, loading }) {
       <table className="data-table">
         <thead>
           <tr>
-            {typeKey === 'RiverBasinDistrict' && <th>ID</th>}
             <th>Name</th>
             {typeKey === 'WaterQualityStation' && <th>ID</th>}
-            {typeKey === 'WaterBody' && <th>River Basin</th>}
             {typeKey === 'WaterQualityStation' && <th>Location</th>}
             <th style={{ width: 80 }}>Actions</th>
           </tr>
@@ -432,16 +411,8 @@ function EntityList({ typeKey, entities, onDelete, loading }) {
         <tbody>
           {entities.map(entity => (
             <tr key={entity.id}>
-              {typeKey === 'RiverBasinDistrict' && (
-                <td>
-                  <code className="mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                    {shortId(entity.id)}
-                  </code>
-                </td>
-              )}
               <td style={{ fontWeight: 500 }}>{extractProp(entity, 'name')}</td>
               {typeKey === 'WaterQualityStation' && <td><code className="mono" style={{ fontSize: '0.75rem' }}>{extractProp(entity, 'eaNotation')}</code></td>}
-              {typeKey === 'WaterBody' && <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>{extractProp(entity, 'riverBasinDistrict')}</td>}
               {typeKey === 'WaterQualityStation' && <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', fontFamily: 'IBM Plex Mono, monospace' }}>{extractProp(entity, 'location')}</td>}
               <td>
                 <button
@@ -463,9 +434,8 @@ function EntityList({ typeKey, entities, onDelete, loading }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function EntityManager() {
-  const [activeType, setActiveType] = useState('RiverBasinDistrict')
+  const [activeType, setActiveType] = useState('WaterBody')
   const [entities, setEntities] = useState({
-    RiverBasinDistrict: [],
     WaterBody: [],
     WaterQualityStation: [],
   })
