@@ -7,6 +7,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-draw/dist/leaflet.draw.css'
 import axios from 'axios'
+import { stationName } from '../utils/station'
 
 const api = axios.create({ baseURL: '/api' })
 
@@ -39,13 +40,6 @@ const ICON_DEFAULT  = makeIcon('#4477AA')
 const ICON_SELECTED = makeIcon('#EE6677', true)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function stationName(s) {
-  return s['https://uri.etsi.org/ngsi-ld/name']?.value
-    || s.name?.value
-    || s.id?.split(':').pop()
-    || 'Unknown Station'
-}
-
 function stationCoords(s) {
   const coords = s.location?.value?.coordinates
   if (!coords) return null
@@ -281,10 +275,10 @@ export default function MapView() {
       .finally(() => setLoadingReadings(false))
   }, [selectedStation])
 
-  const handleMarkerClick = useCallback((station) => {
+  const handleMarkerClick = (station) => {
     setSelectedGroup([])
     setSelectedStation(station)
-  }, [])
+  }
 
   const handlePolygonCreated = useCallback((layer) => {
     const inside = stations.filter(s => {
@@ -296,18 +290,14 @@ export default function MapView() {
     setSelectedGroup(inside)
   }, [stations])
 
-  const handleRemoveFromGroup = useCallback((id) => {
-    setSelectedGroup(prev => {
-      const next = prev.filter(s => s.id !== id)
-      if (next.length === 0) { return [] }
-      return next
-    })
-  }, [])
+  const handleRemoveFromGroup = (id) => {
+    setSelectedGroup(prev => prev.filter(s => s.id !== id))
+  }
 
-  const handleClearSelection = useCallback(() => {
+  const handleClearSelection = () => {
     setSelectedStation(null)
     setSelectedGroup([])
-  }, [])
+  }
 
   const selectedIds = new Set([
     ...(selectedStation ? [selectedStation.id] : []),

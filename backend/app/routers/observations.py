@@ -20,5 +20,5 @@ async def get_latest(station_id: str):
 
 
 @router.get("/stations/{station_id}/history/{param}")
-async def get_history(station_id: str, param: str, limit: int = 100):
-    return await timescale.get_parameter_history(station_id, param, limit)
+async def get_history(station_id: str, param: str, hours: int = 24):
+    return await timescale.get_parameter_history(station_id, param, hours)

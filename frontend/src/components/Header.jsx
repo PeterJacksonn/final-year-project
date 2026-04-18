@@ -30,12 +30,6 @@ export default function Header() {
     }}>
       {/* Brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-        <div style={{
-          width: '8px', height: '8px', borderRadius: '50%',
-          background: 'var(--tol-cyan)',
-          boxShadow: '0 0 6px var(--tol-cyan)',
-          animation: 'pulse 2s infinite',
-        }} />
         <span style={{ fontWeight: 600, letterSpacing: '0.03em', fontSize: '0.9rem' }}>
           FIWARE Water Quality Monitor
         </span>
@@ -72,12 +66,6 @@ export default function Header() {
         {time.toISOString().replace('T', ' ').slice(0, 19)} UTC
       </span>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-      `}</style>
     </header>
   )
 }

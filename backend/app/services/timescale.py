@@ -1,3 +1,4 @@
+from datetime import datetime, timezone, timedelta
 from app.database import get_pool
 from app.config import DB_COLUMNS, PARAMETER_META, PARAMETERS
 from fastapi import HTTPException
@@ -31,13 +32,15 @@ async def get_latest_readings(station_id: str) -> dict:
     return {"stationId": station_id, "readings": results}
 
 
-async def get_parameter_history(station_id: str, param: str, limit: int = 100) -> dict:
+async def get_parameter_history(station_id: str, param: str, hours: int = 24) -> dict:
     if param not in PARAMETERS:
         raise HTTPException(status_code=400, detail=f"Unknown parameter: {param}")
 
     col = DB_COLUMNS[param]
     id_prefix = f"urn:ngsi-ld:WaterQualityObserved:{station_id}:%"
     pool = get_pool()
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     async with pool.acquire() as conn:
         rows = await conn.fetch(
@@ -46,11 +49,12 @@ async def get_parameter_history(station_id: str, param: str, limit: int = 100) -
             FROM etwaterqualityobserved
             WHERE entity_id LIKE $1
               AND {col} IS NOT NULL
+              AND time_index >= $2
             ORDER BY time_index ASC
-            LIMIT $2
+            LIMIT 2000
             """,
             id_prefix,
-            limit,
+            cutoff,
         )
 
     series = [
