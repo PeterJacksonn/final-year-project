@@ -491,7 +491,7 @@ export default function EntityManager() {
     <div className="page-layout">
       <Header />
 
-      <div className="page-content">
+      <main className="page-content">
         {/* Page title */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <div>
@@ -541,7 +541,7 @@ export default function EntityManager() {
               {cfg.label}
               <span style={{
                 background: activeType === key ? 'var(--color-primary-light)' : '#f0f3f7',
-                color: activeType === key ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                color: 'var(--color-text)',
                 borderRadius: '10px',
                 padding: '0.1rem 0.5rem',
                 fontSize: '0.75rem',
@@ -594,7 +594,7 @@ export default function EntityManager() {
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       {showCsvUpload && (
         <CsvUploadModal onClose={() => setShowCsvUpload(false)} />

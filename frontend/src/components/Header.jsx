@@ -41,13 +41,13 @@ export default function Header() {
           const active = location.pathname.startsWith(to)
           return (
             <Link key={to} to={to} style={{
-              color: active ? '#fff' : 'rgba(255,255,255,0.7)',
+              color: '#fff',
               textDecoration: 'none',
               padding: '0.3rem 0.75rem',
               borderRadius: '3px',
               fontSize: '0.85rem',
-              background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
-              transition: 'background 0.15s, color 0.15s',
+              background: active ? 'rgba(255,255,255,0.2)' : 'transparent',
+              transition: 'background 0.15s',
             }}>
               {label}
             </Link>
@@ -60,7 +60,7 @@ export default function Header() {
         marginLeft: 'auto',
         fontFamily: 'IBM Plex Mono, monospace',
         fontSize: '0.75rem',
-        color: 'rgba(255,255,255,0.6)',
+        color: '#fff',
         letterSpacing: '0.02em',
       }}>
         {time.toISOString().replace('T', ' ').slice(0, 19)} UTC

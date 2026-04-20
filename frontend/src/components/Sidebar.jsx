@@ -5,7 +5,7 @@ export default function Sidebar({ stations, selectedStation, onSelect }) {
   return (
     <aside className="w-64 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0">
       <div className="p-4">
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
+        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-3">
           Monitoring Stations
         </p>
         <div className="space-y-1">
@@ -23,7 +23,7 @@ export default function Sidebar({ stations, selectedStation, onSelect }) {
                 }`}
               >
                 <div className="text-sm font-medium leading-tight">{stationName(s)}</div>
-                <div className="text-xs text-gray-400 mt-0.5">{notation}</div>
+                <div className="text-xs text-gray-600 mt-0.5">{notation}</div>
               </button>
             )
           })}
