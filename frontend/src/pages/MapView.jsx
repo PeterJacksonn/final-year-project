@@ -29,7 +29,7 @@ function makeIcon(color, selected = false) {
     </svg>
   `)
   return L.divIcon({
-    html: `<img src="data:image/svg+xml,${svg}" />`,
+    html: `<img src="data:image/svg+xml,${svg}" alt="" />`,
     iconSize: [size * 2, size * 2],
     iconAnchor: [size, size],
     className: '',
@@ -181,6 +181,7 @@ function MultiStationSidebar({ stations, onRemove, onClear }) {
               className="btn btn-danger btn-sm"
               style={{ marginLeft: '0.5rem', flexShrink: 0 }}
               onClick={() => onRemove(s.id)}
+              aria-label={`Remove ${stationName(s)}`}
             >
               ✕
             </button>
@@ -314,7 +315,7 @@ export default function MapView() {
       <Header />
 
       {/* Map + sidebar layout */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+      <main style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
 
         {/* Map */}
         <div style={{ flex: 1, position: 'relative' }}>
@@ -415,7 +416,7 @@ export default function MapView() {
                 lineHeight: 1,
                 padding: '0.2rem',
               }}
-              title="Close"
+              aria-label="Close"
             >
               ✕
             </button>
@@ -437,7 +438,7 @@ export default function MapView() {
             )}
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }

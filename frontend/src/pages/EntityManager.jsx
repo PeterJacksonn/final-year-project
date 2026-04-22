@@ -31,9 +31,8 @@ const ENTITY_TYPES = {
     autoIdFrom: 'eaNotation',  // entity ID is derived from this field — no separate ID input
     fields: [
       { key: 'name', label: 'Station Name', type: 'text', placeholder: 'e.g. Don at Meadowhall', required: true },
-      { key: 'eaNotation', label: 'EA Notation', type: 'text', placeholder: 'e.g. NE-49301997', required: true,
-        hint: 'EA sampling point notation — becomes the entity ID suffix' },
-      { key: 'waterBody', label: 'Water Body', type: 'relationship', relType: 'WaterBody', required: true },
+      { key: 'eaNotation', label: 'Station ID', type: 'text', placeholder: 'e.g. NE-49301997', required: true },
+      { key: 'waterBody', label: 'Water Body', type: 'relationship', relType: 'WaterBody' },
       { key: 'latitude', label: 'Latitude', type: 'number', placeholder: 'e.g. 53.4084', required: true },
       { key: 'longitude', label: 'Longitude', type: 'number', placeholder: 'e.g. -1.4612', required: true },
       { key: 'elevation', label: 'Elevation (m)', type: 'number', placeholder: 'Optional' },
@@ -43,7 +42,7 @@ const ENTITY_TYPES = {
       type: 'WaterQualityStation',
       name: { type: 'Property', value: values.name },
       eaNotation: { type: 'Property', value: values.eaNotation },
-      waterBody: { type: 'Relationship', object: values.waterBody },
+      ...(values.waterBody && { isPartOf: { type: 'Relationship', object: values.waterBody } }),
       location: {
         type: 'GeoProperty',
         value: {

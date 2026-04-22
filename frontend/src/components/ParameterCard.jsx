@@ -11,8 +11,8 @@ export default function ParameterCard({ data, selected, onClick }) {
         >
             <div className="text-xs font-medium text-gray-500 mb-2">{data.label}</div>
             <div className="text-2xl font-semibold text-gray-900">{data.value}</div>
-            <div className="text-xs text-gray-400 mt-1">{data.unit}</div>
-            <div className="text-xs text-gray-300 mt-2">{date}</div>
+            <div className="text-xs text-gray-500 mt-1">{data.unit}</div>
+            <div className="text-xs text-gray-500 mt-2">{date}</div>
         </button>
     )
 }
