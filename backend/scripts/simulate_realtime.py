@@ -189,14 +189,20 @@ def load_stats_for_station(conn, ea):
 # ─── Simulation logic ─────────────────────────────────────────────────────────
 
 def generate_value(param, stats, previous):
-    """Mean-reverting random walk, clamped to hard limits."""
+    """Mean-reverting random walk, clamped to hard limits.
+
+    Uses an Ornstein-Uhlenbeck-style update:
+        new = previous + θ(μ - previous) + σ·ε
+    where θ=0.1 (reversion strength), μ=historical mean, σ=0.3·stddev, ε~N(0,1).
+    Mean and stddev are derived from real EA data in TimescaleDB.
+    """
     s = stats[param]
     mean, stddev = s["mean"], s["stddev"]
     if previous is None:
         previous = mean
 
-    reversion = 0.1 * (mean - previous)
-    noise = random.gauss(0, stddev * 0.3)
+    reversion = 0.1 * (mean - previous)   # pull toward historical mean
+    noise = random.gauss(0, stddev * 0.3)  # scaled Gaussian noise
     new_val = previous + reversion + noise
 
     lo, hi = CLAMP[param]

@@ -51,7 +51,8 @@ function shortId(id) {
 }
 
 function pointInPolygon(point, polygon) {
-  // Ray casting algorithm
+  // Ray casting algorithm: counts how many times a ray from the point crosses
+  // the polygon boundary — odd crossings = inside, even = outside
   const [lat, lng] = point
   const latlngs = polygon.getLatLngs()[0]
   let inside = false

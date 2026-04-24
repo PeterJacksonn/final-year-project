@@ -5,6 +5,8 @@ from fastapi import HTTPException
 
 
 async def get_latest_readings(station_id: str) -> dict:
+    # Match all WaterQualityObserved entities belonging to this station
+    # (entity IDs follow the pattern urn:ngsi-ld:WaterQualityObserved:{station_id}:{timestamp})
     id_prefix = f"urn:ngsi-ld:WaterQualityObserved:{station_id}:%"
     results = {}
     pool = get_pool()
@@ -33,6 +35,7 @@ async def get_latest_readings(station_id: str) -> dict:
 
 
 async def get_parameter_history(station_id: str, param: str, hours: int = 24) -> dict:
+    # Queries TimescaleDB time-series table written by QuantumLeap subscription notifications
     if param not in PARAMETERS:
         raise HTTPException(status_code=400, detail=f"Unknown parameter: {param}")
 

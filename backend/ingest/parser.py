@@ -6,7 +6,8 @@ Groups rows by (sampling point, observation time) — one entity per visit.
 import pandas as pd
 from typing import Optional
 
-# Map EA determinand labels to NGSI-LD attribute names
+# Maps Environment Agency determinand labels (from CSV) to NGSI-LD Smart Data Model attribute names
+# Each entry: EA label → (NGSI-LD attribute, UNCEFACT unit code)
 DETERMINAND_MAP = {
     "pH":                                   ("pH",                  None),
     "Temperature of Water":                 ("temperature",         "CEL"),
@@ -41,6 +42,8 @@ def parse_csv(filepath: str) -> list[dict]:
 
     entities = []
 
+    # Group by station + observation time: one NGSI-LD entity per site visit
+    # (the EA CSV has one row per determinand, so a single visit produces multiple rows)
     for (station_id, obs_time), group in df.groupby(
         ["samplingPoint.notation", "phenomenonTime"]
     ):
