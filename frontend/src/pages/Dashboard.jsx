@@ -236,8 +236,11 @@ function SingleStationView({ stationParam }) {
   useEffect(() => {
     if (!selectedStation || !selectedParam) return
     const id = stationNotation(selectedStation)
-    getHistory(id, selectedParam, historyHours).then(r => setHistory(r.data))
-  }, [selectedStation, selectedParam, historyHours])
+    const fetchHistory = () => getHistory(id, selectedParam, historyHours).then(r => setHistory(r.data))
+    fetchHistory()
+    const interval = setInterval(fetchHistory, pollInterval)
+    return () => clearInterval(interval)
+  }, [selectedStation, selectedParam, historyHours, pollInterval])
 
   const name = stationName(selectedStation)
   const notation = stationNotation(selectedStation)

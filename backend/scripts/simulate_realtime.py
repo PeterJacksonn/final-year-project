@@ -106,10 +106,12 @@ def ensure_entity_exists(station):
     sim_id = f"urn:ngsi-ld:WaterQualityObserved:{station['ea']}:simulated"
     url = f"{ORION_URL}/ngsi-ld/v1/entities/{sim_id}"
 
-    if requests.get(url).status_code == 200:
-        station["sim_id"] = sim_id
-        return
+    # Delete and recreate to ensure all 10 parameters exist as attributes.
+    # PATCH /attrs only updates existing attributes — if an attribute wasn't in the
+    # original entity, it will be silently skipped on every subsequent PATCH.
+    requests.delete(url)
 
+    s = station.get("stats", {})
     entity = {
         "id": sim_id,
         "type": "WaterQualityObserved",
@@ -118,8 +120,15 @@ def ensure_entity_exists(station):
             "type": "Relationship",
             "object": station["entity_id"],
         },
-        "pH": {"type": "Property", "value": 7.5},
     }
+    for param, (lo, hi) in CLAMP.items():
+        mean = s.get(param, {}).get("mean", (lo + hi) / 2)
+        prop = {"type": "Property", "value": round(mean, 3)}
+        unit = UNIT_CODES.get(param)
+        if unit:
+            prop["unitCode"] = unit
+        entity[param] = prop
+
     r = requests.post(
         f"{ORION_URL}/ngsi-ld/v1/entities",
         json=entity,
