@@ -83,6 +83,7 @@ function ComparisonView({ stationsParam }) {
   const [histories, setHistories] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [pollInterval, setPollInterval] = useState(10000)
 
   useEffect(() => {
     const ids = stationsParam.split(',').filter(Boolean)
@@ -96,23 +97,28 @@ function ComparisonView({ stationsParam }) {
 
   useEffect(() => {
     if (stations.length === 0) return
-    setLoading(true)
-    setError(null)
-    Promise.all(
-      stations.map(s => {
-        const id = stationNotation(s)
-        return getHistory(id, selectedParam, historyHours).then(r => ({
-          id,
-          name: stationName(s),
-          data: r.data.data,
-          meta: r.data.meta,
-        }))
-      })
-    )
-      .then(setHistories)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [stations, selectedParam, historyHours])
+    const fetchAll = () => {
+      setLoading(true)
+      setError(null)
+      Promise.all(
+        stations.map(s => {
+          const id = stationNotation(s)
+          return getHistory(id, selectedParam, historyHours).then(r => ({
+            id,
+            name: stationName(s),
+            data: r.data.data,
+            meta: r.data.meta,
+          }))
+        })
+      )
+        .then(setHistories)
+        .catch(err => setError(err.message))
+        .finally(() => setLoading(false))
+    }
+    fetchAll()
+    const interval = setInterval(fetchAll, pollInterval)
+    return () => clearInterval(interval)
+  }, [stations, selectedParam, historyHours, pollInterval])
 
   const meta = histories[0]?.meta || null
 
@@ -155,17 +161,31 @@ function ComparisonView({ stationsParam }) {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-1">
-            {HISTORY_WINDOWS.map((opt, i) =>
-              opt === null
-                ? <span key="div" style={{ width: 1, height: 20, background: 'var(--color-border)', margin: '0 0.25rem' }} />
-                : (
-                  <button key={opt.hours} onClick={() => setHistoryHours(opt.hours)}
-                    className={`btn btn-sm ${historyHours === opt.hours ? 'btn-primary' : 'btn-secondary'}`}>
-                    {opt.label}
-                  </button>
-                )
-            )}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1">
+              {HISTORY_WINDOWS.map((opt, i) =>
+                opt === null
+                  ? <span key="div" style={{ width: 1, height: 20, background: 'var(--color-border)', margin: '0 0.25rem' }} />
+                  : (
+                    <button key={opt.hours} onClick={() => setHistoryHours(opt.hours)}
+                      className={`btn btn-sm ${historyHours === opt.hours ? 'btn-primary' : 'btn-secondary'}`}>
+                      {opt.label}
+                    </button>
+                  )
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Refresh</span>
+              {POLL_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setPollInterval(opt.value)}
+                  className={`btn btn-sm ${pollInterval === opt.value ? 'btn-primary' : 'btn-secondary'}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
