@@ -1,6 +1,6 @@
 """
 Parses EA Water Quality CSV into NGSI-LD WaterQualityObserved entities.
-Groups rows by (sampling point, observation time) — one entity per visit.
+Groups rows by (sampling point, observation time)... one entity per visit.
 """
 
 import pandas as pd

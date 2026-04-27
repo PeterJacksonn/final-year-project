@@ -39,7 +39,7 @@ function makeIcon(color, selected = false) {
 const ICON_DEFAULT  = makeIcon('#4477AA')
 const ICON_SELECTED = makeIcon('#EE6677', true)
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ---
 function stationCoords(s) {
   const coords = s.location?.value?.coordinates
   if (!coords) return null
@@ -50,9 +50,9 @@ function shortId(id) {
   return id?.split(':').slice(3).join(':') || id
 }
 
+// Ray casting algorithm: counts how many times a ray from the point crosses
+// the polygon boundary:  odd crossings = inside, even = outside
 function pointInPolygon(point, polygon) {
-  // Ray casting algorithm: counts how many times a ray from the point crosses
-  // the polygon boundary — odd crossings = inside, even = outside
   const [lat, lng] = point
   const latlngs = polygon.getLatLngs()[0]
   let inside = false
@@ -66,7 +66,7 @@ function pointInPolygon(point, polygon) {
   return inside
 }
 
-// ─── Sidebar: single station ──────────────────────────────────────────────────
+// ─── Sidebar: single station ---
 function StationSidebar({ station, readings, loadingReadings }) {
   const name = stationName(station)
   const id = shortId(station.id)
