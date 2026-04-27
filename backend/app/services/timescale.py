@@ -34,8 +34,8 @@ async def get_latest_readings(station_id: str) -> dict:
     return {"stationId": station_id, "readings": results}
 
 
+# Queries TimescaleDB time-series table written by QuantumLeap subscription notifications
 async def get_parameter_history(station_id: str, param: str, hours: int = 24) -> dict:
-    # Queries TimescaleDB time-series table written by QuantumLeap subscription notifications
     if param not in PARAMETERS:
         raise HTTPException(status_code=400, detail=f"Unknown parameter: {param}")
 
