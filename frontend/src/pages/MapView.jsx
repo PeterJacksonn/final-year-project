@@ -221,7 +221,7 @@ function DrawControl({ onPolygonCreated }) {
         onCreated={(e) => {
           if (e.layerType === 'polygon') {
             onPolygonCreated(e.layer)
-            // Remove the drawn layer after selection — we use our own markers
+            // Remove the drawn layer after selection, we use our own markers
             e.layer.remove()
           }
         }}

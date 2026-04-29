@@ -18,7 +18,7 @@ async def get_stations():
 
 @router.get("/stations/{station_id}/latest")
 async def get_latest(station_id: str):
-    # Queries TimescaleDB directly for the most recent reading per parameter —
+    # Queries TimescaleDB directly for the most recent reading per parameter;
     # bypasses QuantumLeap's REST API due to reliability issues found during development
     return await timescale.get_latest_readings(station_id)
 

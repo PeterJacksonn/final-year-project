@@ -28,7 +28,7 @@ const ENTITY_TYPES = {
     label: 'Water Quality Stations',
     singular: 'Water Quality Station',
     idPrefix: 'urn:ngsi-ld:WaterQualityStation:',
-    autoIdFrom: 'eaNotation',  // entity ID is derived from this field — no separate ID input
+    autoIdFrom: 'eaNotation',  // entity ID is derived from this field, no separate ID input
     fields: [
       { key: 'name', label: 'Station Name', type: 'text', placeholder: 'e.g. Don at Meadowhall', required: true },
       { key: 'eaNotation', label: 'Station ID', type: 'text', placeholder: 'e.g. NE-49301997', required: true },
@@ -88,12 +88,12 @@ function shortId(id) {
 
 function extractProp(entity, key) {
   const val = entity?.[key]
-  if (!val) return '—'
+  if (!val) return '-'
   if (val.type === 'Property') return String(val.value)
   if (val.type === 'Relationship') return shortId(val.object)
   if (val.type === 'GeoProperty') {
     const coords = val.value?.coordinates
-    return coords ? `${coords[1].toFixed(4)}, ${coords[0].toFixed(4)}` : '—'
+    return coords ? `${coords[1].toFixed(4)}, ${coords[0].toFixed(4)}` : '-'
   }
   return String(val)
 }
@@ -157,7 +157,7 @@ function CsvUploadModal({ onClose }) {
           <div>
             <h2 style={{ fontSize: '1rem', marginBottom: '0.2rem' }}>Upload Observation Data</h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: 0 }}>
-              Station ID and location are read from the CSV — observations for all
+              Station ID and location are read from the CSV. Observations for all
               stations in the file will be ingested.
             </p>
           </div>
@@ -192,7 +192,7 @@ function CsvUploadModal({ onClose }) {
         {uploadResult && (
           <div className="alert alert-success">
             <strong>Upload complete.</strong>{' '}
-            {uploadResult.parsed} observations parsed —{' '}
+            {uploadResult.parsed} observations parsed:{' '}
             {uploadResult.created} created, {uploadResult.updated} updated
             {uploadResult.failed > 0 && `, ${uploadResult.failed} failed`}.
           </div>
@@ -284,7 +284,7 @@ function EntityForm({ typeKey, existingEntities, onSubmit, onCancel, loading }) 
                 onChange={e => set(field.key, e.target.value)}
                 required={field.required}
               >
-                <option value="">— select {field.label.toLowerCase()} —</option>
+                <option value="">Select {field.label.toLowerCase()}</option>
                 {options.map(e => (
                   <option key={e.id} value={e.id}>
                     {extractProp(e, 'name')} ({shortId(e.id)})
@@ -293,7 +293,7 @@ function EntityForm({ typeKey, existingEntities, onSubmit, onCancel, loading }) 
               </select>
               {options.length === 0 && (
                 <span className="form-hint" style={{ color: 'var(--color-warning)' }}>
-                  No {field.relType} entities found — create one first
+                  No {field.relType} entities found. Create one first
                 </span>
               )}
             </div>
@@ -309,7 +309,7 @@ function EntityForm({ typeKey, existingEntities, onSubmit, onCancel, loading }) 
                 value={values[field.key] || ''}
                 onChange={e => set(field.key, e.target.value)}
               >
-                <option value="">— select —</option>
+                <option value="">Select</option>
                 {field.options.map(opt => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}

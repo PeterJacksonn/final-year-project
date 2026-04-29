@@ -107,7 +107,7 @@ def ensure_entity_exists(station):
     url = f"{ORION_URL}/ngsi-ld/v1/entities/{sim_id}"
 
     # Delete and recreate to ensure all 10 parameters exist as attributes.
-    # PATCH /attrs only updates existing attributes — if an attribute wasn't in the
+    # PATCH /attrs only updates existing attributes. If an attribute wasn't in the
     # original entity, it will be silently skipped on every subsequent PATCH.
     requests.delete(url)
 
@@ -289,7 +289,7 @@ def main():
 
     signal.signal(signal.SIGINT, handle_exit)
 
-    print(f"Simulating {len(stations)} station(s) — Ctrl+C to stop\n")
+    print(f"Simulating {len(stations)} station(s) (Ctrl+C to stop)\n")
 
     tick = 0
     while True:

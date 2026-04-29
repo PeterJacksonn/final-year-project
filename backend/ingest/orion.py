@@ -27,7 +27,7 @@ def upsert_entity(entity: dict) -> tuple[str, int]:
         return entity_id, 201
 
     if response.status_code == 409:
-        # Entity exists — patch attributes
+        # Entity exists: patch attributes
         attrs = {
             k: v
             for k, v in entity.items()
