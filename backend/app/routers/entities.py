@@ -8,11 +8,6 @@ router = APIRouter(prefix="/api/entities", tags=["entities"])
 
 
 class EntityPayload(BaseModel):
-    """
-    Accepts any valid NGSI-LD entity dict from the frontend.
-    The frontend constructs the full NGSI-LD shape; we just
-    proxy it to Orion with the correct @context injected.
-    """
     model_config = {"extra": "allow"}
 
 
@@ -29,10 +24,6 @@ async def list_entities(entity_type: str, limit: int = 100):
 
 @router.post("")
 async def create_entity(payload: dict[str, Any]):
-    """
-    Accepts the NGSI-LD entity body from the frontend.
-    Injects @context if not already present, then forwards to Orion.
-    """
     entity_type = payload.get("type")
     if entity_type not in MANAGEABLE_ENTITY_TYPES:
         raise HTTPException(
@@ -50,9 +41,6 @@ async def create_entity(payload: dict[str, Any]):
 
 @router.delete("/{entity_id:path}")
 async def delete_entity(entity_id: str):
-    """
-    entity_id is the full URN e.g. urn:ngsi-ld:WaterBody:GB112071065780
-    The :path converter handles the colons in the URN.
-    """
+    # :path converter needed because entity URNs contain colons
     await orion.delete_entity(entity_id)
     return {"status": "deleted", "id": entity_id}

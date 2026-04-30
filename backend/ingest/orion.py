@@ -1,8 +1,3 @@
-"""
-Handles posting NGSI-LD entities to Orion-LD.
-Upserts by attempting POST, falling back to PATCH if entity already exists.
-"""
-
 import requests
 import logging
 
@@ -13,10 +8,6 @@ HEADERS = {"Content-Type": "application/ld+json"}
 
 
 def upsert_entity(entity: dict) -> tuple[str, int]:
-    """
-    POST entity to Orion. If it already exists (409), PATCH its attributes.
-    Returns (entity_id, status_code).
-    """
     entity_id = entity["id"]
     url = f"{ORION_URL}/ngsi-ld/v1/entities"
 
@@ -45,9 +36,6 @@ def upsert_entity(entity: dict) -> tuple[str, int]:
 
 
 def upsert_entities(entities: list[dict]) -> dict:
-    """
-    Upsert a list of entities. Returns a summary dict.
-    """
     results = {"created": 0, "updated": 0, "failed": 0, "total": len(entities)}
 
     for entity in entities:
