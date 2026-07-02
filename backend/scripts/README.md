@@ -12,7 +12,7 @@ subscription and writes them to TimescaleDB, which the frontend then polls.
 ### Prerequisites
 
 - Docker stack running (`docker compose up -d` from project root)
-- QuantumLeap subscription recreated (see project root SETUP.md)
+- QuantumLeap subscription recreated (see project root README.md)
 - Backend virtualenv active (`source backend/.venv/bin/activate`)
 - `requests` and `psycopg2` installed in the venv
 
