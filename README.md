@@ -30,7 +30,13 @@ projects.
 
 ---
 
-## Stack
+## System Architecture
+
+![Container Diagram](docs/c4-diagrams/Diagram2.png)
+
+---
+
+## Technology Stack
 
 | Layer | Technology |
 |---|---|
