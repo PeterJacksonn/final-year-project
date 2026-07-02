@@ -1,8 +1,9 @@
 # Design and Implementation of a Real-Time Water Quality Monitoring System Using FIWARE
 
 **Peter Jackson**\
-Final Year Project, Sheffield Hallam University\
-Supervisor: Dr. Carlos Eduardo da Silva
+Final Year Project - Sheffield Hallam University\
+Supervisor: Dr. Carlos Eduardo da Silva\
+Grade: First Class (89%)
 
 ---
 
