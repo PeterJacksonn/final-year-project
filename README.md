@@ -5,6 +5,12 @@ Final Year Project - Sheffield Hallam University\
 Supervisor: Dr. Carlos Eduardo da Silva\
 Grade: First Class (89%)
 
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
+![FIWARE](https://img.shields.io/badge/FIWARE-Orion--LD-FF6900)
+
 ---
 
 ## Abstract
