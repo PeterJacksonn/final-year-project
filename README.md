@@ -37,6 +37,30 @@ projects.
 
 ---
 
+## Screenshots
+
+### Station Dashboard
+Real-time sensor readings with configurable auto-refresh and full historical time-series.
+
+![Station Dashboard](docs/screenshots/dashboard.webp)
+
+### Map Navigation
+Leaflet-based map view with polygon selection tool for building multi-station comparison groups.
+
+![Map View](docs/screenshots/map.webp)
+
+### Multi-Station Comparison
+Compare parameters across monitoring stations over configurable time windows.
+
+![Multi-Station Comparison](docs/screenshots/multi-station.webp)
+
+### Entity Manager
+Create and manage NGSI-LD entities in the Orion-LD context broker, with CSV import support.
+
+![Entity Manager](docs/screenshots/entity-management.webp)
+
+---
+
 ## Technology Stack
 
 | Layer | Technology |
